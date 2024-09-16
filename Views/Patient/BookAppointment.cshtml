@@ -1,0 +1,109 @@
+﻿@{
+    ViewData["Title"] = "Book Appointment";
+}
+
+<style>
+    body {
+        background-color: lightblue; /* Light blue background for the entire page */
+        margin: 0;
+        font-family: Arial, sans-serif; /* Clean font */
+    }
+
+    .appointment-form {
+        background-color: white; /* White background for the form */
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for better visibility */
+        max-width: 600px; /* Maximum width for the form */
+        margin: 20px auto; /* Center the form horizontally */
+    }
+
+    .form-group {
+        margin-bottom: 15px; /* Space between form groups */
+    }
+
+        .form-group label {
+            font-weight: bold; /* Bold labels for clarity */
+        }
+
+    .form-control {
+        width: 100%; /* Full width for form controls */
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc; /* Light border color */
+    }
+
+    .btn-primary {
+        background-color: #007bff; /* Primary button color */
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3; /* Darker button color on hover */
+        }
+</style>
+
+<form asp-action="ConfirmAppointment" class="appointment-form">
+    <input type="hidden" name="PatientId" value="@ViewBag.PatientId" />
+
+    <div class="form-group">
+        <label for="specialization">Select Department:</label>
+        <select id="specialization" class="form-control" asp-items="@(new SelectList(ViewBag.Specializations, "SpecializationId", "SpecializationName"))">
+            <option value="">-- Select Specialization --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="doctor">Select Doctor:</label>
+        <select id="doctor" class="form-control" name="doctorId">
+            <option value="">-- Select Doctor --</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="appointmentDate">Select Date:</label>
+        <input type="date" id="appointmentDate" class="form-control" name="appointmentDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+    </div>
+
+    <div class="form-group">
+        <label for="timeSlot">Select Time Slot:</label>
+        <select id="timeSlot" class="form-control" name="timeSlot" required>
+            <option value="">-- Select Time Slot --</option>
+            <!-- Time slots for all 24 hours with AM/PM -->
+            @for (int hour = 0; hour < 24; hour++)
+            {
+                var period = hour < 12 ? "AM" : "PM";
+                var displayHour = hour % 12 == 0 ? 12 : hour % 12;
+                <option value="@hour.ToString("D2"):00">@displayHour:00 @period</option>
+            }
+        </select>
+    </div>
+
+    <div>
+        <button type="submit" class="btn btn-primary">Confirm Appointment</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#specialization').change(function () {
+                var specializationId = $(this).val();
+                $('#doctor').empty(); // Clear doctor dropdown
+
+                if (specializationId) {
+                    $.getJSON('/Patient/GetDoctorsBySpecialization', { specializationId: specializationId }, function (data) {
+                        $.each(data, function (index, item) {
+                            $('#doctor').append($('<option>', { value: item.doctorId, text: item.doctorName }));
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}
